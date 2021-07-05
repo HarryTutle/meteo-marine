@@ -9,33 +9,72 @@ Created on Fri May 14 10:59:52 2021
 import numpy as np
 import pandas as pd
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 import gzip
 import glob
 
-import meteo_marine_traitement as mmt
+import meteo_marine_traitement as mmc
 
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 files_list=[]
-files=glob.glob('/home/harry/Documents/projet_station_meteo/bouee marines/marine.201[4,5,6,8]*.csv.gz')
+files=glob.glob('/home/harry/Documents/projet_station_meteo/bouee marines/marine.[0-9]*.csv.gz')
 
 for filename in files:
    with gzip.open(filename) as f:
-      data=pd.read_csv(f, sep=";")
+      data=pd.read_csv(f, sep=";", low_memory=False)
       files_list.append(data)
     
 data=pd.concat(files_list, axis=0)
 
-meteo=mmt.Meteo_Marine_Classeur(data, jours=3)
+meteo=mmc.Meteo_Marine_Classeur(data, jours=1, vue=23, cible='température', var_corbeille=[])
+
+
+
+
+
 dataset=meteo.data_good_shape
-cible=meteo.target_force
+cible=meteo.target
 
-X_train, X_test, y_train, y_test=train_test_split(dataset, cible, test_size=0.2)
 
-model=RandomForestClassifier(n_jobs=2, n_estimators=150)
+
+
+X_train, X_test, y_train, y_test=train_test_split(dataset, cible, test_size=0.2, random_state=0)
+
+model=RandomForestClassifier(n_jobs=2, max_depth=None, max_features='auto',n_estimators=100, random_state=0)
 model.fit(X_train, y_train)
 
 print(model.score(X_train, y_train))
 print(model.score(X_test, y_test))
+
+''' trace les histogrammes des variables et leur degré d utilisation'''
+paramètres=model.feature_importances_
+print(paramètres)
+
+
+
+def plot_var_importantes(model):
+    n_features=dataset.shape[1]
+    plt.figure(figsize=[12, 8])
+    plt.barh(range(n_features), model.feature_importances_, align='center')
+    plt.yticks(np.arange(n_features))
+    plt.xlabel('importance des variables')
+    plt.ylabel('variables')
+    plt.ylim(-1, n_features)
+    
+plot_var_importantes(model)
+
+''' calcule la certitude de la prévision'''
+
+probas=model.predict_proba(X_test)
+max_liste=[]
+for line in probas:
+    maximum=np.max(line)
+    max_liste.append(maximum)
+certitude=np.mean(max_liste)
+
+print(certitude)
+    
