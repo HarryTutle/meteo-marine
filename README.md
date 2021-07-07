@@ -13,7 +13,7 @@ Il comporte des fonctions et surtout une classe appelée Meteo_Marine_Classeur q
 - cible: (défaut='direction') règle quelle variable on veut prédire. ça peut-être: force, direction, humidité, pression, température, point_rosée.
 
 
-
+Le programme 'voir un peu' indique comment importer les données et utiliser ce module. Ligne 24, on utilise glob pour importer les données stockées dans un fichier du pc. On indique le chemin pour ce fichier et le tour est joué ! Ensuite via du regex on peut se limiter à quelques fichiers si on le souhaite.
 
 
  
